@@ -2,6 +2,7 @@ package main
 
 import (
 	"net/http"
+
 	"github.com/gin-gonic/gin"
 )
 
@@ -17,6 +18,8 @@ func SubmitAssignment(c *gin.Context) {
 		return
 	}
 
+	userID, _ := c.Get("user_id")
+
 	var input SubmissionInput
 	if err := c.ShouldBindJSON(&input); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
@@ -25,6 +28,7 @@ func SubmitAssignment(c *gin.Context) {
 
 	submission := Submission{
 		AssignmentID: input.AssignmentID,
+		StudentID:    userID.(string),
 		FileURL:      input.FileURL,
 	}
 	DB.Create(&submission)
