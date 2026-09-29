@@ -49,12 +49,22 @@ func (u *User) BeforeCreate(tx *gorm.DB) (err error) {
 	return
 }
 
+type Major struct {
+	ID        uint   `gorm:"primaryKey"`
+	MajorName string `gorm:"type:varchar(100);not null;unique"`
+	CreatedAt time.Time
+}
+
 type Class struct {
 	ID                uint   `gorm:"primaryKey"`
 	ClassName         string `gorm:"type:varchar(50);not null;unique"`
 	HomeroomTeacherID *string
 	HomeroomTeacher   *User `gorm:"foreignKey:HomeroomTeacherID"`
-	CreatedAt         time.Time
+
+	MajorID *uint
+	Major   *Major `gorm:"foreignKey:MajorID"`
+
+	CreatedAt time.Time
 }
 
 type Subject struct {
@@ -121,7 +131,7 @@ func main() {
 		log.Fatal(err)
 	}
 
-	DB.AutoMigrate(&Role{}, &User{}, &Class{}, &Subject{}, &Schedule{}, &Material{}, &Assignment{}, &Submission{})
+	DB.AutoMigrate(&Role{}, &User{}, &Class{}, &Major{}, &Subject{}, &Schedule{}, &Material{}, &Assignment{}, &Submission{})
 	seedRoles()
 
 	r := gin.Default()
@@ -150,6 +160,11 @@ func main() {
 
 		protected.PUT("/admin/students/:student_id/class", AssignStudentToClass)
 		protected.POST("/admin/import", ImportDataExcel)
+
+		protected.GET("/admin/majors", GetMajors)
+		protected.POST("/admin/majors", CreateMajor)
+		protected.PUT("/admin/majors/:id", UpdateMajor)
+		protected.DELETE("/admin/majors/:id", DeleteMajor)
 	}
 
 	log.Println("server on di: http://localhost:8080")
