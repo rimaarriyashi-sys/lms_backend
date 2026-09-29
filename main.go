@@ -21,25 +21,25 @@ type Role struct {
 
 type User struct {
 	ID           string `gorm:"primaryKey;type:varchar(36)"`
-	NISN_NIP     string `gorm:"type:varchar(50)"` 
-	NIS          string `gorm:"type:varchar(50)"` 
+	NISN_NIP     string `gorm:"type:varchar(50)"`
+	NIS          string `gorm:"type:varchar(50)"`
 	Name         string `gorm:"type:varchar(100);not null"`
 	Email        string `gorm:"type:varchar(100);unique;not null"`
 	PasswordHash string `gorm:"type:varchar(255);not null"`
 	TempatLahir  string `gorm:"type:varchar(100)"`
 	TanggalLahir string `gorm:"type:date"`
 	JenisKelamin string `gorm:"type:varchar(20)"`
-	Specialty    string `gorm:"type:varchar(100)"` 
-	
-	RoleID       uint
-	Role         Role   `gorm:"foreignKey:RoleID"`
-	
-	ClassID      *uint  
-	Class        *Class `gorm:"foreignKey:ClassID"`
+	Specialty    string `gorm:"type:varchar(100)"`
+
+	RoleID uint
+	Role   Role `gorm:"foreignKey:RoleID"`
+
+	ClassID *uint
+	Class   *Class `gorm:"foreignKey:ClassID"`
 
 	TaughtClasses []Class `gorm:"many2many:teacher_classes;"`
 
-	CreatedAt    time.Time
+	CreatedAt time.Time
 }
 
 func (u *User) BeforeCreate(tx *gorm.DB) (err error) {
@@ -52,39 +52,39 @@ func (u *User) BeforeCreate(tx *gorm.DB) (err error) {
 type Class struct {
 	ID                uint   `gorm:"primaryKey"`
 	ClassName         string `gorm:"type:varchar(50);not null;unique"`
-	HomeroomTeacherID *string 
-	HomeroomTeacher   *User   `gorm:"foreignKey:HomeroomTeacherID"`
+	HomeroomTeacherID *string
+	HomeroomTeacher   *User `gorm:"foreignKey:HomeroomTeacherID"`
 	CreatedAt         time.Time
 }
 
 type Subject struct {
 	ID          uint   `gorm:"primaryKey"`
 	SubjectName string `gorm:"type:varchar(100);not null"`
-	TeacherID   string 
-	Teacher     User   `gorm:"foreignKey:TeacherID"`
+	TeacherID   string
+	Teacher     User `gorm:"foreignKey:TeacherID"`
 }
 
 type Schedule struct {
-	ID        uint   `gorm:"primaryKey"`
-	ClassID   uint   
-	Class     Class  `gorm:"foreignKey:ClassID"`
-	SubjectID uint   
+	ID        uint `gorm:"primaryKey"`
+	ClassID   uint
+	Class     Class `gorm:"foreignKey:ClassID"`
+	SubjectID uint
 	Subject   Subject `gorm:"foreignKey:SubjectID"`
-	DayOfWeek string `gorm:"type:varchar(20);not null"`
-	StartTime string `gorm:"type:varchar(10);not null"`
-	EndTime   string `gorm:"type:varchar(10);not null"`
+	DayOfWeek string  `gorm:"type:varchar(20);not null"`
+	StartTime string  `gorm:"type:varchar(10);not null"`
+	EndTime   string  `gorm:"type:varchar(10);not null"`
 }
 
 type Material struct {
-	ID         uint   `gorm:"primaryKey"`
+	ID         uint `gorm:"primaryKey"`
 	SubjectID  uint
 	Title      string `gorm:"type:varchar(255);not null"`
 	ContentURL string `gorm:"type:text"`
-	UploadedBy string 
+	UploadedBy string
 }
 
 type Assignment struct {
-	ID        uint   `gorm:"primaryKey"`
+	ID        uint `gorm:"primaryKey"`
 	SubjectID uint
 	Title     string `gorm:"type:varchar(255);not null"`
 	Deadline  time.Time
@@ -92,24 +92,34 @@ type Assignment struct {
 }
 
 type Submission struct {
-	ID           uint   `gorm:"primaryKey"`
+	ID           uint `gorm:"primaryKey"`
 	AssignmentID uint
-	StudentID    string 
+	StudentID    string
 	FileURL      string `gorm:"type:text;not null"`
 	Score        int
 	Feedback     string `gorm:"type:text"`
 }
 
 func seedRoles() {
-	roles := []Role{{ID: 1, RoleName: "Admin"}, {ID: 2, RoleName: "Guru"}, {ID: 3, RoleName: "Siswa"}}
-	for _, role := range roles { DB.FirstOrCreate(&role, Role{ID: role.ID}) }
+	roles := []Role{
+		{ID: 1, RoleName: "Admin"},
+		{ID: 2, RoleName: "Guru"},
+		{ID: 3, RoleName: "Siswa"},
+		{ID: 4, RoleName: "Kurikulum"},
+		{ID: 5, RoleName: "Kepsek"},
+	}
+	for _, role := range roles {
+		DB.FirstOrCreate(&role, Role{ID: role.ID})
+	}
 	log.Println("✅ Data Role berhasil disuntikkan!")
 }
 
 func main() {
 	var err error
 	DB, err = gorm.Open(sqlite.Open("lms_data.db"), &gorm.Config{})
-	if err != nil { log.Fatal(err) }
+	if err != nil {
+		log.Fatal(err)
+	}
 
 	DB.AutoMigrate(&Role{}, &User{}, &Class{}, &Subject{}, &Schedule{}, &Material{}, &Assignment{}, &Submission{})
 	seedRoles()
@@ -125,7 +135,7 @@ func main() {
 	r.POST("/api/login", Login)
 
 	protected := r.Group("/api")
-	protected.Use(AuthMiddleware()) 
+	protected.Use(AuthMiddleware())
 	{
 		protected.GET("/admin/classes", GetClasses)
 		protected.GET("/admin/classes/:id/details", GetClassDetails)
