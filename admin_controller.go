@@ -9,6 +9,7 @@ import (
 type ClassInput struct {
 	ClassName         string  `json:"class_name" binding:"required"`
 	HomeroomTeacherID *string `json:"homeroom_teacher_id"`
+	MajorID           *uint   `json:"major_id"`
 }
 
 func CreateClass(c *gin.Context) {
@@ -18,7 +19,7 @@ func CreateClass(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
-	class := Class{ClassName: input.ClassName, HomeroomTeacherID: input.HomeroomTeacherID}
+	class := Class{ClassName: input.ClassName, HomeroomTeacherID: input.HomeroomTeacherID, MajorID: input.MajorID}
 	DB.Create(&class)
 	c.JSON(http.StatusOK, gin.H{"message": "Kelas berhasil dibuat!", "data": class})
 }
@@ -26,7 +27,7 @@ func CreateClass(c *gin.Context) {
 func GetClasses(c *gin.Context) {
 	if !isAdmin(c) { return }
 	var classes []Class
-	DB.Preload("HomeroomTeacher").Find(&classes)
+	DB.Preload("HomeroomTeacher").Preload("Major").Find(&classes)
 	c.JSON(http.StatusOK, gin.H{"data": classes})
 }
 
@@ -46,8 +47,9 @@ func UpdateClass(c *gin.Context) {
 	var input ClassInput
 	if err := c.ShouldBindJSON(&input); err != nil { return }
 	DB.Model(&class).Updates(map[string]interface{}{
-		"ClassName": input.ClassName, 
+		"ClassName": input.ClassName,
 		"HomeroomTeacherID": input.HomeroomTeacherID,
+		"MajorID": input.MajorID,
 	})
 	c.JSON(http.StatusOK, gin.H{"message": "Kelas berhasil diperbarui"})
 }
@@ -69,8 +71,8 @@ type UserInput struct {
 	TempatLahir  string `json:"tempat_lahir"`
 	TanggalLahir string `json:"tanggal_lahir"`
 	JenisKelamin string `json:"jenis_kelamin"`
-	Specialty    string `json:"specialty"` 
-	ClassID      *uint  `json:"class_id"` 
+	Specialty    string `json:"specialty"`
+	ClassID      *uint  `json:"class_id"`
 }
 
 func GetUsers(c *gin.Context) {
@@ -90,7 +92,7 @@ func CreateUser(c *gin.Context) {
 	hash, _ := bcrypt.GenerateFromPassword([]byte(input.Password), bcrypt.DefaultCost)
 	user := User{
 		Name: input.Name, Email: input.Email, PasswordHash: string(hash), RoleID: input.RoleID,
-		NISN_NIP: input.NISN_NIP, NIS: input.NIS, TempatLahir: input.TempatLahir, 
+		NISN_NIP: input.NISN_NIP, NIS: input.NIS, TempatLahir: input.TempatLahir,
 		TanggalLahir: input.TanggalLahir, JenisKelamin: input.JenisKelamin, Specialty: input.Specialty,
 		ClassID: input.ClassID,
 	}
@@ -106,13 +108,13 @@ func UpdateUser(c *gin.Context) {
 	id := c.Param("id")
 	var user User
 	if err := DB.First(&user, "id = ?", id).Error; err != nil { return }
-	
+
 	var input UserInput
 	if err := c.ShouldBindJSON(&input); err != nil { return }
-	
+
 	updates := map[string]interface{}{
 		"Name": input.Name, "Email": input.Email, "NISN_NIP": input.NISN_NIP, "NIS": input.NIS,
-		"TempatLahir": input.TempatLahir, "TanggalLahir": input.TanggalLahir, 
+		"TempatLahir": input.TempatLahir, "TanggalLahir": input.TanggalLahir,
 		"JenisKelamin": input.JenisKelamin, "Specialty": input.Specialty,
 		"ClassID": input.ClassID,
 	}
