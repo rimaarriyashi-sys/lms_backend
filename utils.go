@@ -22,11 +22,12 @@ func CheckPasswordHash(password, hash string) bool {
 }
 
 // Fungsi buat "tiket masuk" JWT
-func GenerateJWT(email string, roleID uint) (string, error) {
+func GenerateJWT(userID string, email string, roleID uint) (string, error) {
 	claims := jwt.MapClaims{
+		"id":      userID,
 		"email":   email,
 		"role_id": roleID,
-		"exp":     time.Now().Add(time.Hour * 72).Unix(), // Tiket cmn 72 jam
+		"exp":     time.Now().Add(time.Hour * 72).Unix(),
 	}
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 	return token.SignedString(jwtKey)
