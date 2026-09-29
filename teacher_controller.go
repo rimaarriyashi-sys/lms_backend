@@ -2,6 +2,7 @@ package main
 
 import (
 	"net/http"
+
 	"github.com/gin-gonic/gin"
 )
 
@@ -18,6 +19,8 @@ func CreateMaterial(c *gin.Context) {
 		return
 	}
 
+	userID, _ := c.Get("user_id")
+
 	var input MaterialInput
 	if err := c.ShouldBindJSON(&input); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
@@ -28,6 +31,7 @@ func CreateMaterial(c *gin.Context) {
 		SubjectID:  input.SubjectID,
 		Title:      input.Title,
 		ContentURL: input.ContentURL,
+		UploadedBy: userID.(string),
 	}
 	DB.Create(&material)
 
