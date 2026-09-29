@@ -36,8 +36,9 @@ func AuthMiddleware() gin.HandlerFunc {
 		}
 
 		if claims, ok := token.Claims.(jwt.MapClaims); ok && token.Valid {
+			c.Set("user_id", claims["id"])
 			c.Set("user_email", claims["email"])
-			c.Set("role_id", claims["role_id"]) 
+			c.Set("role_id", claims["role_id"])
 			c.Next()
 		} else {
 			c.JSON(http.StatusUnauthorized, gin.H{"error": "Token udah kadaluarsa atau gk kedaftar"})
