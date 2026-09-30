@@ -239,6 +239,12 @@ func main() {
 		protected.GET("/guru/submissions/:submission_id/answers", GetSubmissionAnswers)
 		protected.PUT("/guru/answers/:answer_id/grade", GradeEssayAnswer)
 		// ↑↑↑ SAMPAI SINI ↑↑↑
+
+		protected.GET("/siswa/quizzes", GetAvailableQuizzes)
+		protected.GET("/siswa/quizzes/:quiz_id/questions", GetQuizForStudent)
+		protected.POST("/siswa/quizzes/:quiz_id/start", StartQuiz)
+		protected.POST("/siswa/submissions/:submission_id/submit", SubmitQuiz)
+		protected.GET("/siswa/submissions/:submission_id/result", GetMyQuizResult)
 	
 	}
 
