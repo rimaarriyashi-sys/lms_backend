@@ -229,6 +229,17 @@ func main() {
 		protected.POST("/admin/majors", CreateMajor)
 		protected.PUT("/admin/majors/:id", UpdateMajor)
 		protected.DELETE("/admin/majors/:id", DeleteMajor)
+
+		// ↓↓↓ TAMBAHIN INI ↓↓↓
+		protected.POST("/guru/quizzes", CreateQuiz)
+		protected.GET("/guru/quizzes", GetMyQuizzes)
+		protected.POST("/guru/quizzes/:quiz_id/questions", AddQuestion)
+		protected.GET("/guru/quizzes/:quiz_id/questions", GetQuizQuestions)
+		protected.GET("/guru/quizzes/:quiz_id/submissions", GetQuizSubmissions)
+		protected.GET("/guru/submissions/:submission_id/answers", GetSubmissionAnswers)
+		protected.PUT("/guru/answers/:answer_id/grade", GradeEssayAnswer)
+		// ↑↑↑ SAMPAI SINI ↑↑↑
+	
 	}
 
 	log.Println("server on di: http://localhost:8080")
