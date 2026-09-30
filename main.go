@@ -110,6 +110,66 @@ type Submission struct {
 	Feedback     string `gorm:"type:text"`
 }
 
+type Quiz struct {
+	ID        uint `gorm:"primaryKey"`
+	SubjectID uint
+	Subject   Subject `gorm:"foreignKey:SubjectID"`
+	TeacherID string
+	Teacher   User   `gorm:"foreignKey:TeacherID"`
+	Title     string `gorm:"type:varchar(255);not null"`
+	QuizType  string `gorm:"type:varchar(20);not null"` // "kuis" atau "ujian"
+
+	IsTimed     bool `gorm:"default:false"`
+	DurationMin int
+
+	StartTime time.Time
+	EndTime   time.Time
+
+	CreatedAt time.Time
+}
+
+type Question struct {
+	ID           uint   `gorm:"primaryKey"`
+	QuizID       uint
+	QuestionText string `gorm:"type:text;not null"`
+	QuestionType string `gorm:"type:varchar(20);not null"` // "pilihan_ganda" atau "esai"
+
+	OptionA       string `gorm:"type:text"`
+	OptionB       string `gorm:"type:text"`
+	OptionC       string `gorm:"type:text"`
+	OptionD       string `gorm:"type:text"`
+	CorrectOption string `gorm:"type:varchar(1)"`
+
+	Score int `gorm:"default:10"`
+}
+
+type QuizSubmission struct {
+	ID        uint `gorm:"primaryKey"`
+	QuizID    uint
+	Quiz      Quiz `gorm:"foreignKey:QuizID"`
+	StudentID string
+	Student   User `gorm:"foreignKey:StudentID"`
+
+	StartedAt   time.Time
+	SubmittedAt *time.Time
+
+	TotalScore int
+	Status     string `gorm:"type:varchar(20);default:'mengerjakan'"`
+}
+
+type Answer struct {
+	ID               uint `gorm:"primaryKey"`
+	QuizSubmissionID uint
+	QuestionID       uint
+	Question         Question `gorm:"foreignKey:QuestionID"`
+
+	SelectedOption string `gorm:"type:varchar(1)"`
+	EssayAnswer    string `gorm:"type:text"`
+
+	Score          int
+	TeacherComment string `gorm:"type:text"`
+}
+
 func seedRoles() {
 	roles := []Role{
 		{ID: 1, RoleName: "Admin"},
@@ -131,7 +191,11 @@ func main() {
 		log.Fatal(err)
 	}
 
-	DB.AutoMigrate(&Role{}, &User{}, &Class{}, &Major{}, &Subject{}, &Schedule{}, &Material{}, &Assignment{}, &Submission{})
+	DB.AutoMigrate(
+		&Role{}, &User{}, &Class{}, &Major{}, &Subject{}, &Schedule{},
+		&Material{}, &Assignment{}, &Submission{},
+		&Quiz{}, &Question{}, &QuizSubmission{}, &Answer{},
+	)
 	seedRoles()
 
 	r := gin.Default()
