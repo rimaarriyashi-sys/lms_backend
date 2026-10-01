@@ -170,6 +170,20 @@ type Answer struct {
 	TeacherComment string `gorm:"type:text"`
 }
 
+type Grade struct {
+	ID        uint `gorm:"primaryKey"`
+	StudentID string
+	Student   User `gorm:"foreignKey:StudentID"`
+	SubjectID uint
+	Subject   Subject `gorm:"foreignKey:SubjectID"`
+
+	AssignmentAvg float64 // rata-rata nilai tugas/projek
+	QuizAvg       float64 // rata-rata nilai kuis/ujian
+	FinalScore    float64 // nilai akhir gabungan
+
+	GeneratedAt time.Time
+}
+
 func seedRoles() {
 	roles := []Role{
 		{ID: 1, RoleName: "Admin"},
@@ -192,10 +206,11 @@ func main() {
 	}
 
 	DB.AutoMigrate(
-		&Role{}, &User{}, &Class{}, &Major{}, &Subject{}, &Schedule{},
-		&Material{}, &Assignment{}, &Submission{},
-		&Quiz{}, &Question{}, &QuizSubmission{}, &Answer{},
-	)
+	&Role{}, &User{}, &Class{}, &Major{}, &Subject{}, &Schedule{},
+	&Material{}, &Assignment{}, &Submission{},
+	&Quiz{}, &Question{}, &QuizSubmission{}, &Answer{},
+	&Grade{},
+)
 	seedRoles()
 
 	r := gin.Default()
