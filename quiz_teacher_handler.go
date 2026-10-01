@@ -10,11 +10,11 @@ import (
 // ============ CREATE QUIZ ============
 
 type QuizInput struct {
-	SubjectID   uint   `json:"subject_id" binding:"required"`
-	Title       string `json:"title" binding:"required"`
-	QuizType    string `json:"quiz_type" binding:"required"` // "kuis" atau "ujian"
-	IsTimed     bool   `json:"is_timed"`
-	DurationMin int    `json:"duration_min"`
+	SubjectID   uint      `json:"subject_id" binding:"required"`
+	Title       string    `json:"title" binding:"required"`
+	QuizType    string    `json:"quiz_type" binding:"required"` // "kuis" atau "ujian"
+	IsTimed     bool      `json:"is_timed"`
+	DurationMin int       `json:"duration_min"`
 	StartTime   time.Time `json:"start_time" binding:"required"`
 	EndTime     time.Time `json:"end_time" binding:"required"`
 }
@@ -189,7 +189,6 @@ func GradeEssayAnswer(c *gin.Context) {
 		"TeacherComment": input.TeacherComment,
 	})
 
-	// Hitung ulang TotalScore di QuizSubmission
 	var allAnswers []Answer
 	DB.Where("quiz_submission_id = ?", answer.QuizSubmissionID).Find(&allAnswers)
 	total := 0
@@ -204,7 +203,114 @@ func GradeEssayAnswer(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"message": "Nilai esai berhasil disimpan"})
 }
 
-// helper kecil convert string ke uint
+// ============ UPDATE & DELETE QUIZ ============
+
+func UpdateQuiz(c *gin.Context) {
+	roleID, _ := c.Get("role_id")
+	if uint(roleID.(float64)) != 2 {
+		c.JSON(http.StatusForbidden, gin.H{"error": "Akses Ditolak! Anda bukan Guru."})
+		return
+	}
+	userID, _ := c.Get("user_id")
+
+	quizID := c.Param("quiz_id")
+	var quiz Quiz
+	if err := DB.Where("id = ? AND teacher_id = ?", quizID, userID.(string)).First(&quiz).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Kuis tidak ditemukan atau bukan milik Anda"})
+		return
+	}
+
+	var input QuizInput
+	if err := c.ShouldBindJSON(&input); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	DB.Model(&quiz).Updates(map[string]interface{}{
+		"SubjectID":   input.SubjectID,
+		"Title":       input.Title,
+		"QuizType":    input.QuizType,
+		"IsTimed":     input.IsTimed,
+		"DurationMin": input.DurationMin,
+		"StartTime":   input.StartTime,
+		"EndTime":     input.EndTime,
+	})
+
+	c.JSON(http.StatusOK, gin.H{"message": "Kuis berhasil diperbarui"})
+}
+
+func DeleteQuiz(c *gin.Context) {
+	roleID, _ := c.Get("role_id")
+	if uint(roleID.(float64)) != 2 {
+		c.JSON(http.StatusForbidden, gin.H{"error": "Akses Ditolak! Anda bukan Guru."})
+		return
+	}
+	userID, _ := c.Get("user_id")
+
+	quizID := c.Param("quiz_id")
+	var quiz Quiz
+	if err := DB.Where("id = ? AND teacher_id = ?", quizID, userID.(string)).First(&quiz).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Kuis tidak ditemukan atau bukan milik Anda"})
+		return
+	}
+
+	DB.Where("quiz_id = ?", quizID).Delete(&Question{})
+	DB.Delete(&quiz)
+
+	c.JSON(http.StatusOK, gin.H{"message": "Kuis dan semua soalnya dihapus"})
+}
+
+// ============ UPDATE & DELETE QUESTION ============
+
+func UpdateQuestion(c *gin.Context) {
+	roleID, _ := c.Get("role_id")
+	if uint(roleID.(float64)) != 2 {
+		c.JSON(http.StatusForbidden, gin.H{"error": "Akses Ditolak! Anda bukan Guru."})
+		return
+	}
+
+	questionID := c.Param("question_id")
+	var question Question
+	if err := DB.First(&question, questionID).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Soal tidak ditemukan"})
+		return
+	}
+
+	var input QuestionInput
+	if err := c.ShouldBindJSON(&input); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	DB.Model(&question).Updates(map[string]interface{}{
+		"QuestionText":  input.QuestionText,
+		"QuestionType":  input.QuestionType,
+		"OptionA":       input.OptionA,
+		"OptionB":       input.OptionB,
+		"OptionC":       input.OptionC,
+		"OptionD":       input.OptionD,
+		"CorrectOption": input.CorrectOption,
+		"Score":         input.Score,
+	})
+
+	c.JSON(http.StatusOK, gin.H{"message": "Soal berhasil diperbarui"})
+}
+
+func DeleteQuestion(c *gin.Context) {
+	roleID, _ := c.Get("role_id")
+	if uint(roleID.(float64)) != 2 {
+		c.JSON(http.StatusForbidden, gin.H{"error": "Akses Ditolak! Anda bukan Guru."})
+		return
+	}
+
+	questionID := c.Param("question_id")
+	DB.Delete(&Question{}, questionID)
+
+	c.JSON(http.StatusOK, gin.H{"message": "Soal dihapus"})
+}
+
+// ============ HELPER ============
+
 func parseUint(s string) uint {
 	var result uint
 	for _, ch := range s {

@@ -220,7 +220,6 @@ func main() {
 	}))
 
 	r.GET("/api/status", func(c *gin.Context) { c.JSON(http.StatusOK, gin.H{"status": "sukses"}) })
-	r.POST("/api/register", Register)
 	r.POST("/api/login", Login)
 
 	protected := r.Group("/api")
@@ -272,6 +271,31 @@ func main() {
 		protected.GET("/viewer/quizzes", ViewQuizzesByTeacher)
 		protected.GET("/viewer/teachers", ViewAllTeachers)
 		protected.GET("/viewer/students", ViewAllStudents)
+
+		protected.POST("/admin/subjects", CreateSubject)
+		protected.GET("/subjects", GetSubjects)
+		protected.PUT("/admin/subjects/:id", UpdateSubject)
+		protected.DELETE("/admin/subjects/:id", DeleteSubject)
+
+		protected.POST("/admin/schedules", CreateSchedule)
+		protected.GET("/schedules", GetSchedules)
+		protected.GET("/schedules/class/:class_id", GetScheduleByClass)
+		protected.PUT("/admin/schedules/:id", UpdateSchedule)
+		protected.DELETE("/admin/schedules/:id", DeleteSchedule)
+
+		protected.PUT("/guru/quizzes/:quiz_id", UpdateQuiz)
+		protected.DELETE("/guru/quizzes/:quiz_id", DeleteQuiz)
+		protected.PUT("/guru/questions/:question_id", UpdateQuestion)
+		protected.DELETE("/guru/questions/:question_id", DeleteQuestion)
+
+		protected.PUT("/guru/materials/:id", UpdateMaterial)
+		protected.DELETE("/guru/materials/:id", DeleteMaterial)
+
+		protected.POST("/guru/assignments", CreateAssignment)
+		protected.GET("/assignments", GetAssignments)
+		protected.PUT("/guru/assignments/:id", UpdateAssignment)
+		protected.DELETE("/guru/assignments/:id", DeleteAssignment)
+		protected.PUT("/guru/submissions/:submission_id/grade", GradeSubmission)
 	
 	}
 
