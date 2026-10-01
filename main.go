@@ -260,6 +260,18 @@ func main() {
 		protected.POST("/siswa/quizzes/:quiz_id/start", StartQuiz)
 		protected.POST("/siswa/submissions/:submission_id/submit", SubmitQuiz)
 		protected.GET("/siswa/submissions/:submission_id/result", GetMyQuizResult)
+
+		// ↓↓↓ TAMBAHIN INI (route Grade) ↓↓↓
+		protected.POST("/guru/subjects/:subject_id/generate-grades", GenerateGrades)
+		protected.GET("/guru/subjects/:subject_id/grades", GetGradesBySubject)
+		protected.GET("/siswa/grades", GetMyGrades)
+		// ↑↑↑ SAMPAI SINI ↑↑↑
+
+		protected.GET("/viewer/grades", ViewAllGrades)
+		protected.GET("/viewer/assignments", ViewAllAssignments)
+		protected.GET("/viewer/quizzes", ViewQuizzesByTeacher)
+		protected.GET("/viewer/teachers", ViewAllTeachers)
+		protected.GET("/viewer/students", ViewAllStudents)
 	
 	}
 
